@@ -9,7 +9,7 @@ import bodyParser from 'body-parser';
 import { SubscriptionControllers } from './app/modules/subscription/subscription.controllers.js'
 import { Server } from 'socket.io';
 import { createServer } from 'node:http'
-import { initSocket } from './app/socket/socket.config.js'
+import { initSocket, isAllowedOrigin } from './app/socket/socket.config.js'
 
 export const app = express()
 export const server = createServer(app);
@@ -36,7 +36,13 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), SubscriptionC
 app.set('trust proxy', 1)
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://travel-buddy-frontend-six.vercel.app'],
+    origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+        }
+    },
     credentials: true
 }))
 app.use(cookieParser())
