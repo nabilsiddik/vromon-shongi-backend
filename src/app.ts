@@ -17,13 +17,18 @@ export const server = createServer(app);
 // Initialize socket.io
 initSocket(server)
 
-app.get('/health', (_req: Request, res: Response) => {
+const healthCheckHandler = (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
-    uptime: process.uptime(),
-    timestamp: Date.now()
-  })
-})
+    message: 'Vromon Shongi Server is healthy and active',
+    uptime: `${Math.floor(process.uptime())}s`,
+    timestamp: new Date().toISOString(),
+  });
+};
+
+// Health routes for uptime monitors (cron-job.org, UptimeRobot, etc.)
+app.all('/health', healthCheckHandler);
+app.all('/api/v1/health', healthCheckHandler);
 
 
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), SubscriptionControllers.stripeWebhook);
@@ -38,11 +43,13 @@ app.use(cookieParser())
 
 app.use('/api/v1', router)
 
-app.get('/', (req: Request, res: Response) => {
+app.all('/', (_req: Request, res: Response) => {
     res.status(200).json({
-        message: `Server is running...`
-    })
-})
+        status: 'ok',
+        message: `Vromon Shongi Server is running...`,
+        timestamp: new Date().toISOString()
+    });
+});
 
 app.use(notFound)
 app.use(globalErrorHandler)
