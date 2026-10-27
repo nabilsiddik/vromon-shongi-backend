@@ -9,18 +9,35 @@ import type { TravelPlanWhereInput } from "../../../../generated/prisma/models.j
 import { fileUploader } from "../../utils/fileUploader.js";
 
 // create travel plan
+// create travel plan
 const createTravelPlan = async (req: Request & { user?: JWTPayload }) => {
   const userId = req.user?.id;
-
-  let uploadedResult: any;
-  if (req?.file) {
-    uploadedResult = await fileUploader.uploadToCloudinary(req.file);
-  }
 
   if (!userId) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "User not found");
   }
 
+  let uploadedResult: any;
+  if (req?.file) {
+    try {
+      uploadedResult = await fileUploader.uploadToCloudinary(req.file);
+    } catch (uploadError) {
+      console.error("Travel plan image upload failed:", uploadError);
+    }
+  }
+
+  let bodyData = req.body;
+  if (typeof req.body?.data === "string") {
+    try {
+      bodyData = JSON.parse(req.body.data);
+    } catch {
+      bodyData = req.body;
+    }
+  } else if (req.body?.data && typeof req.body.data === "object") {
+    bodyData = req.body.data;
+  }
+
+  const merged = { ...req.body, ...bodyData };
   const {
     title,
     destination,
@@ -35,37 +52,54 @@ const createTravelPlan = async (req: Request & { user?: JWTPayload }) => {
     includes,
     minMates,
     maxMates
-  } = req.body;
+  } = merged;
 
-  try {
-    const result = await prisma.$transaction(async (prisma) => {
-      const createdPlan = await prisma.travelPlan.create({
-        data: {
-          userId,
-          title,
-          destination,
-          minMates: parseInt(minMates),
-          maxMates: parseInt(maxMates),
-          planImages: [uploadedResult?.secure_url || ''],
-          includes,
-          startDate: new Date(startDate),
-          endDate: new Date(endDate),
-          budgetFrom: parseInt(budgetFrom),
-          budgetTo: parseInt(budgetTo),
-          travelType: travelType,
-          description: description ?? undefined,
-          videoUrl: videoUrl ?? undefined,
-          visibility: visibility ?? 'PUBLIC'
-        },
-      });
-
-      return { travelPlan: createdPlan };
-    });
-
-    return result;
-  } catch (error) {
-    console.error("Transaction Failed:", error);
+  if (!startDate || isNaN(new Date(startDate).getTime())) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Valid start date is required");
   }
+  if (!endDate || isNaN(new Date(endDate).getTime())) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Valid end date is required");
+  }
+
+  const parsedStartDate = new Date(startDate);
+  const parsedEndDate = new Date(endDate);
+
+  if (parsedEndDate <= parsedStartDate) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "End date must be greater than start date");
+  }
+
+  const defaultImage = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80";
+  const planImages = uploadedResult?.secure_url
+    ? [uploadedResult.secure_url]
+    : [defaultImage];
+
+  const parsedIncludes = Array.isArray(includes)
+    ? includes
+    : typeof includes === "string"
+    ? includes.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean)
+    : [];
+
+  const createdPlan = await prisma.travelPlan.create({
+    data: {
+      userId,
+      title: title || `${destination} Travel Plan`,
+      destination,
+      minMates: parseInt(minMates) || 1,
+      maxMates: parseInt(maxMates) || 5,
+      planImages,
+      includes: parsedIncludes,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
+      budgetFrom: parseInt(budgetFrom) || 0,
+      budgetTo: parseInt(budgetTo) || 0,
+      travelType: travelType || "SOLO",
+      description: description ?? undefined,
+      videoUrl: videoUrl ?? undefined,
+      visibility: visibility === "PRIVET" ? "PRIVET" : "PUBLIC",
+    },
+  });
+
+  return { travelPlan: createdPlan };
 };
 
 // Get all plans with filter, seach and pagination

@@ -37,7 +37,12 @@ const userLogin = catchAsync(async (req: Request, res: Response) => {
 
 // Get logedin user info
 const getMe = catchAsync(async (req: Request, res: Response) => {
-  const userSession = req.cookies;
+  let token = req.cookies?.accessToken;
+  const authHeader = req.headers.authorization;
+  if (!token && authHeader?.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  }
+  const userSession = { ...req.cookies, accessToken: token };
 
   const result = await AuthServices.getMe(userSession);
 

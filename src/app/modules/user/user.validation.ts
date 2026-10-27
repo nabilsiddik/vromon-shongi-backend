@@ -5,24 +5,25 @@ export const SubscriptionStatusEnum = z.enum(["NONE", "MONTHLY", "YEARLY"]);
 export const UserStatusEnum = z.enum(["ACTIVE", "BLOCKED", "DELETED"]);
 export const Gender = z.enum(["MALE", "FEMALE", "OTHERS"]);
 
-// patient creation input zod schema
+// user creation input zod schema
 export const createUserSchema = z.object({
     firstName: z
-        .string('First Name is Required'),
+        .string()
+        .min(1, "First Name is required"),
 
     lastName: z
-        .string('Last Name is Required'),
+        .string()
+        .min(1, "Last Name is required"),
 
     email: z
-        .string('Email is Required')
+        .string()
         .email("Invalid email format"),
 
     password: z
-        .string('Password is required')
+        .string()
         .min(6, "Password must be at least 6 characters"),
 
-    birthDate: z.string('Birth Date is Required')
-
+    birthDate: z.string().optional(),
 });
 
 
@@ -32,6 +33,7 @@ export const updateUserZodSchema = z.object({
     firstName: z.string().min(2).optional(),
     lastName: z.string().min(2).optional(),
     bio: z.string().optional(),
+    birthDate: z.string().optional(),
     currentLocation: z.string().optional(),
     interests: z.string().optional(),
     visitedCountries: z.string().optional(),

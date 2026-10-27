@@ -30,8 +30,20 @@ const createTripParticipant = async (tripId: string, participantId: string) => {
         }
     })
 
-    if(existingParticipant){
-        throw new AppError(StatusCodes.CONFLICT, 'You already participated to this trip.')
+    if (existingParticipant) {
+        if (existingParticipant.status === 'PENDING') {
+            throw new AppError(StatusCodes.CONFLICT, 'Your join request is currently pending host approval.');
+        }
+        if (existingParticipant.status === 'REJECTED') {
+            throw new AppError(StatusCodes.FORBIDDEN, 'Your join request was declined by the trip host. You cannot rejoin.');
+        }
+        if (existingParticipant.status === 'APPROVED') {
+            throw new AppError(StatusCodes.CONFLICT, 'You are already an approved participant of this trip.');
+        }
+        if (existingParticipant.status === 'REMOVED') {
+            throw new AppError(StatusCodes.FORBIDDEN, 'You were removed from this trip by the host.');
+        }
+        throw new AppError(StatusCodes.CONFLICT, 'You already have a request record for this trip.');
     }
 
     if(trip?.tripParticipants?.length > trip?.maxMates){
@@ -49,13 +61,16 @@ const createTripParticipant = async (tripId: string, participantId: string) => {
 };
 
 
-// Get all approved participation of an user for join room conversation
+// Get all approved participation of an user for join room conversation (joined + hosted)
 const getAllParticipationsOfAnUser = async (userId: string) => {
-
-    const result = await prisma.tripParticipant.findMany({
+    // 1. All trips where user is an approved participant
+    const approvedParticipations = await prisma.tripParticipant.findMany({
         where: {
             userId: userId,
-            status: 'APPROVED'
+            status: 'APPROVED',
+            trip: {
+                isDeleted: false,
+            },
         },
         include: {
             user: {
@@ -65,30 +80,105 @@ const getAllParticipationsOfAnUser = async (userId: string) => {
                     lastName: true,
                     email: true,
                     profileImage: true,
-                }
+                },
             },
-            trip: true
+            trip: true,
         },
-    })
+        orderBy: {
+            createdAt: 'desc',
+        },
+    });
 
-    return result;
+    // 2. All active trips hosted by this user
+    const hostedTrips = await prisma.travelPlan.findMany({
+        where: {
+            userId: userId,
+            isDeleted: false,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    profileImage: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: 'desc',
+        },
+    });
+
+    const hostedParticipations = hostedTrips.map((trip) => ({
+        id: `host-${trip.id}`,
+        tripId: trip.id,
+        userId: trip.userId,
+        status: 'APPROVED',
+        isHost: true,
+        user: trip.user,
+        trip: trip,
+        createdAt: trip.createdAt,
+        updatedAt: trip.updatedAt,
+    }));
+
+    const existingTripIds = new Set(approvedParticipations.map((p) => p.tripId));
+    const combined = [
+        ...hostedParticipations.filter((h) => !existingTripIds.has(h.tripId)),
+        ...approvedParticipations.map((p) => ({ ...p, isHost: false })),
+    ];
+
+    return combined;
 };
 
 
-// Get all my Participant join request
+// Get all my Participant join request (Incoming to my trips)
 const myParticipantRequest = async (userId: string) => {
-
     const result = await prisma.tripParticipant.findMany({
         where: {
             trip: {
-                userId
+                userId,
+                isDeleted: false
             }
         },
         include: {
             trip: true,
             user: true
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
     })
+
+    return result;
+};
+
+// Get all requests sent by this user to join other trips (Outgoing)
+const getMyOutgoingTripRequests = async (userId: string) => {
+    const result = await prisma.tripParticipant.findMany({
+        where: {
+            userId: userId,
+        },
+        include: {
+            trip: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            profileImage: true,
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
 
     return result;
 };
@@ -158,6 +248,7 @@ const getParticipantsForSpecificTrip = async (tripId: string) => {
 export const TripParticipantServices = {
     createTripParticipant,
     myParticipantRequest,
+    getMyOutgoingTripRequests,
     getTripParticipantById,
     updateParticipantRequest,
     getParticipantsForSpecificTrip,

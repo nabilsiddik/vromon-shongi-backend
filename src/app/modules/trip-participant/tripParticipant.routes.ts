@@ -12,11 +12,38 @@ tripParticipantRouter.post(
   TripParticipantControllers.createTripParticipant
 );
 
+// Get all incoming participant requests for my trips (host view)
+tripParticipantRouter.get(
+  "/",
+  checkAuth(UserRole.ADMIN, UserRole.USER),
+  TripParticipantControllers.myParticipantRequest
+);
+
+// Get all requests sent by this user to join other trips (outgoing view)
+tripParticipantRouter.get(
+  "/outgoing",
+  checkAuth(UserRole.ADMIN, UserRole.USER),
+  TripParticipantControllers.myOutgoingTripRequests
+);
+
 // Get all approved participation of an user for join room conversation
 tripParticipantRouter.get(
   "/joined",
-  checkAuth(UserRole.USER),
+  checkAuth(UserRole.ADMIN, UserRole.USER),
   TripParticipantControllers.getAllParticipationsOfAnUser
+);
+
+// Get user participation status for a specific trip
+tripParticipantRouter.get(
+  "/participation-status/:tripId",
+  checkAuth(UserRole.ADMIN, UserRole.USER),
+  TripParticipantControllers.getUserParticipationForTrip
+);
+
+// Get participant for specific trip
+tripParticipantRouter.get(
+  "/participants/:tripId",
+  TripParticipantControllers.getParticipantsForSpecificTrip
 );
 
 // Get trip participant by id
@@ -26,27 +53,11 @@ tripParticipantRouter.get(
   TripParticipantControllers.getTripParticipantById
 );
 
-// Get user participation
-tripParticipantRouter.get(
-  "/participation-status/:tripId",
-  checkAuth(UserRole.ADMIN, UserRole.USER),
-  TripParticipantControllers.getUserParticipationForTrip
-);
-
 // Update participant request
 tripParticipantRouter.patch(
   "/:id",
   checkAuth(UserRole.ADMIN, UserRole.USER),
   TripParticipantControllers.updateParticipantRequest
 );
-
-// Update participant request
-tripParticipantRouter.get(
-  "/participants/:tripId",
-  TripParticipantControllers.getParticipantsForSpecificTrip
-);
-
-
-
 
 export default tripParticipantRouter;

@@ -12,8 +12,14 @@ const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFun
     let message = err.message || 'Something went wrong'
     let error = err
 
+    // Handle Database Connection Errors
+    if (err?.code === 'ECONNREFUSED' || err?.message?.includes('ECONNREFUSED') || err?.message?.includes("Can't reach database server")) {
+        message = 'Database connection failed. Please ensure PostgreSQL database is running and accessible.';
+        statusCode = StatusCodes.SERVICE_UNAVAILABLE;
+    }
+
     // Handle Prisma Client Known Request Error
-    if (err instanceof PrismaClientKnownRequestError) {
+    else if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === 'P2002') {
             message = `Duplicate key error`
             error = err.meta

@@ -11,14 +11,30 @@ const getChatMessagesForSpecificRoom = async(tripId: string) => {
         }
     })
 
-    if(!room) throw new AppError(StatusCodes.NOT_FOUND, 'Room not found')
+    if (!room) {
+        return [];
+    }
 
     const result = await prisma.chatMessage.findMany({
         where: {
-            roomId: room?.id
-        }
-    })
-    return result || []
+            roomId: room.id,
+        },
+        include: {
+            sender: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    profileImage: true,
+                    verifiedBadge: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: 'asc',
+        },
+    });
+    return result || [];
 }
 
 export const ChatMessagServices = {

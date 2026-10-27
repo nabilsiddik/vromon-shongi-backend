@@ -2,13 +2,18 @@ import { z } from "zod";
 import { TravelType } from "../../../../generated/prisma/enums.js";
 
 const createTravelPlanSchema = z.object({
-  destination: z.string("Destination is required"),
-  startDate: z.string("Start Date is required"),
-  endDate: z.string("End Date is required"),
-  budgetFrom: z.string().optional(),
-  budgetTo: z.string().optional(),
+  title: z.string().optional(),
+  destination: z.string().min(1, "Destination is required"),
+  startDate: z.string().min(1, "Start Date is required"),
+  endDate: z.string().min(1, "End Date is required"),
+  budgetFrom: z.union([z.string(), z.number()]).optional(),
+  budgetTo: z.union([z.string(), z.number()]).optional(),
+  minMates: z.union([z.string(), z.number()]).optional(),
+  maxMates: z.union([z.string(), z.number()]).optional(),
   travelType: z.nativeEnum(TravelType),
   description: z.string().optional(),
+  videoUrl: z.string().optional(),
+  includes: z.union([z.string(), z.array(z.string())]).optional(),
   visibility: z.string().default('PUBLIC'),
 });
 

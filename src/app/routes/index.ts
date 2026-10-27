@@ -9,11 +9,16 @@ import participantRouter from "../modules/travelParticipant/participant.router.j
 import tripParticipantRouter from "../modules/trip-participant/tripParticipant.routes.js";
 import chatRoomRouter from "../modules/chat-room/chatRoom.routes.js";
 import chatMessageRouter from "../modules/chat-message/chatMessage.routes.js";
+import adminRouter from "../modules/admin/admin.routes.js";
 
 
 export const router = Router()
 
 const moduleRoutes = [
+    {
+        path: '/admin',
+        route: adminRouter
+    },
     {
         path: '/user',
         route: userRouter
