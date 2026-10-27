@@ -1,4 +1,4 @@
-# 🌍 Vromon Shongi (ভ্রমণ সঙ্গী) — Backend API & Real-Time Engine
+# Vromon Shongi — Backend API & Real-Time Engine
 
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-black?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
@@ -13,15 +13,15 @@
 
 ---
 
-## 🔗 Live Services
+## Live Services
 
-* **⚡ Live Base API:** [travel-buddy-backend-73ls.onrender.com/api/v1](https://travel-buddy-backend-73ls.onrender.com/api/v1)
-* **🩺 Health Check (Uptime Monitor):** [travel-buddy-backend-73ls.onrender.com/health](https://travel-buddy-backend-73ls.onrender.com/health)
-* **🌐 Companion Frontend Application:** [vromon-shongi.vercel.app](https://vromon-shongi.vercel.app/)
+* **Live Base API:** [travel-buddy-backend-73ls.onrender.com/api/v1](https://travel-buddy-backend-73ls.onrender.com/api/v1)
+* **Health Check (Uptime Monitor):** [travel-buddy-backend-73ls.onrender.com/health](https://travel-buddy-backend-73ls.onrender.com/health)
+* **Companion Frontend Application:** [vromon-shongi.vercel.app](https://vromon-shongi.vercel.app/)
 
 ---
 
-## 🏗️ Core Architecture & Modules
+## Core Architecture & Modules
 
 ```
 src/
@@ -50,7 +50,7 @@ src/
 
 ---
 
-## ✨ Features & Capabilities
+## Features & Capabilities
 
 * **Authentication & Role-Based Access Control (RBAC):**
   * Secure password hashing with `bcryptjs`.
@@ -76,7 +76,7 @@ src/
 
 ---
 
-## 📡 API Endpoint Overview
+## API Endpoint Overview
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -94,7 +94,7 @@ src/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 * **Node.js**: v20.x or higher
@@ -150,7 +150,7 @@ npm start
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Nabil Siddik**
 * **GitHub:** [@nabilsiddik](https://github.com/nabilsiddik)
